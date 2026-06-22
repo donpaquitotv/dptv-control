@@ -338,6 +338,8 @@ const firebaseConfig = {
 };
 
 let auth, db, userRef=null, unsub=null;
+const invoiceSignature=new Image();
+invoiceSignature.src='firmadonpa.png';
 try{
   const app=initializeApp(firebaseConfig);
   auth=getAuth(app);
@@ -860,9 +862,11 @@ function syncInvoicePrintDraft(){if(!invDraft)return false;syncInvoiceFields();i
 function hideFacturaPrint(){const fp=document.getElementById('factura-print');if(fp)fp.style.display='none';window.removeEventListener('afterprint',hideFacturaPrint);window.removeEventListener('focus',hideFacturaPrint);}
 function euroPdf(n){return ((+n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}))+' €';}
 function pdfLines(doc,text,maxWidth){return doc.splitTextToSize(String(text||''),maxWidth);}
-function exportInvoicePDF(){
+function waitForInvoiceSignature(){if(invoiceSignature.complete)return Promise.resolve(invoiceSignature.naturalWidth>0);return new Promise(resolve=>{invoiceSignature.addEventListener('load',()=>resolve(true),{once:true});invoiceSignature.addEventListener('error',()=>resolve(false),{once:true});});}
+async function exportInvoicePDF(){
   if(!syncInvoicePrintDraft())return;
   if(!window.jspdf||!window.jspdf.jsPDF){toast('⚠ Generador PDF no cargado');return;}
+  const hasSignature=await waitForInvoiceSignature();
   const {jsPDF}=window.jspdf, doc=new jsPDF({unit:'mm',format:'a4'});
   const p=data.profile||defProfile(), inv=invDraft, t=invTotals(inv), ivaRate=+inv.ivaRate||21;
   const black=[28,26,27], accent=[39,224,122], muted=[96,96,96], pale=[244,245,244], left=20, right=190;
@@ -894,6 +898,7 @@ function exportInvoicePDF(){
   const legal=[p.nif?('DNI/NIF: '+p.nif):'',p.address?('Dirección: '+p.address):'','Cantabria',p.iban?('Banco/IBAN: '+p.iban):''].filter(Boolean).join('\n');
   doc.text(pdfLines(doc,legal,88),left,234);
   doc.setTextColor(230,230,230);doc.setFont('helvetica','bold');doc.setFontSize(70);doc.text('DPTV',139,250,{align:'center',angle:-18});
+  if(hasSignature){doc.addImage(invoiceSignature,'PNG',122,213,62,35,undefined,'FAST');}
   doc.setDrawColor(...black);doc.setLineWidth(.45);doc.line(122,248,184,248);
   doc.setTextColor(...black);doc.setFontSize(12);doc.text('DonPaquitoTV',153,257,{align:'center'});
   doc.save('factura-'+(inv.num||today())+'.pdf');
