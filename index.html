@@ -79,6 +79,19 @@
   .taxbreak{margin-top:8px;font-size:12px;line-height:1.45;color:var(--muted)}
   .taxbreak b{color:var(--txt);font-weight:800}
   @media(max-width:420px){.dailybox{grid-template-columns:1fr}.dailyhalf .v{font-size:20px}}
+  .liqhero{background:linear-gradient(145deg,rgba(39,224,122,.16),rgba(37,244,238,.06) 55%,rgba(255,255,255,.03));border:1px solid rgba(39,224,122,.3);border-radius:16px;padding:17px;margin-bottom:12px}
+  .liqhero .k{font-family:var(--disp);font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  .liqhero .v{font-family:var(--disp);font-size:31px;font-weight:800;color:var(--neon);margin-top:5px}
+  .liqhero .sub{font-size:12px;color:var(--muted);margin-top:5px}
+  .liqchart{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:14px;padding:12px 10px 8px;margin-bottom:10px;overflow:hidden}
+  .liqchart svg{display:block;width:100%;height:auto;overflow:visible}
+  .liqaxis{display:flex;justify-content:space-between;gap:8px;color:var(--faint);font-size:10px;padding:3px 4px 0}
+  .liqform .row2{gap:9px}
+  .liqinput{font-family:var(--disp);font-size:17px;font-weight:700}
+  .snapmeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .snapmeta span{font-size:10.5px;color:var(--muted);background:rgba(255,255,255,.045);border:1px solid var(--line);padding:4px 7px;border-radius:7px}
+  .snapdel{background:none;border:0;color:#ff6f93;font-size:18px;padding:0 3px;cursor:pointer}
+  @media(max-width:390px){.nav-i{font-size:8.5px}.nav-i svg{width:20px;height:20px}}
   .stchip{font-family:var(--disp);font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;letter-spacing:.04em}
   .statebar{height:4px;width:100%;background:var(--line);border-radius:9px;overflow:hidden;margin:11px 0 2px}
   .statebar i{display:block;height:100%;border-radius:9px;transition:width .4s ease}
@@ -238,6 +251,7 @@
       </div>
       <div id="barber-list"></div>
     </section>
+    <section class="view" id="v-liq"></section>
     <section class="view" id="v-met"></section>
   </main>
   <nav>
@@ -246,6 +260,7 @@
     <button class="nav-i" id="n-collab" onclick="go('collab')"><svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-4-4M8 13a4 4 0 1 0 4 4M2 21c0-3 2.5-5 6-5M22 21c0-3-2.5-5-6-5"/></svg>Colabos<span class="badge" id="b-collab" style="display:none"></span></button>
     <button class="nav-i" id="n-fact" onclick="go('fact')"><svg viewBox="0 0 24 24"><path d="M7 3h8l3 3v15H7zM15 3v4h4M10 12h5M10 16h5"/></svg>Facturas<span class="badge" id="b-fact" style="display:none"></span></button>
     <button class="nav-i" id="n-barber" onclick="go('barber')"><svg viewBox="0 0 24 24"><path d="M6 7l12 12M18 7 6 19M7 7a2 2 0 1 0-4 0 2 2 0 0 0 4 0ZM21 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/></svg>Barbería</button>
+    <button class="nav-i" id="n-liq" onclick="go('liq')"><svg viewBox="0 0 24 24"><path d="M3 7h18v12H3zM3 10h18M7 15h4"/></svg>Liquidez</button>
     <button class="nav-i" id="n-met" onclick="go('met')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Métricas</button>
   </nav>
   <div class="scrim" id="scrim" onclick="closeSheet()"></div>
@@ -354,7 +369,7 @@ const FORMATS=['Reel','TikTok','Carrusel','Story','Short'];
 const STATES=['Idea','Guionizado','Grabado','Editado','Programado','Publicado'];
 const CSTATUS=['Negociando','Activa','Terminada'];
 const INVSTATUS=['Borrador','Enviada','Pendiente','Cobrada','Vencida'];
-let data={videos:[],collabs:[],invoices:[],barber_tx:[],profile:defProfile(),settings:defSettings()};
+let data={videos:[],collabs:[],invoices:[],barber_tx:[],liquidity_history:[],profile:defProfile(),settings:defSettings()};
 let vidFilter='Todos', vidSort='estado', vidSearch='', homeView='hoy', calY=null, calM=null;
 
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -377,22 +392,22 @@ function seed(){
   data={videos:[
     newVid({title:'Asteriscos / contraseñas',hook:'Tu PC ya sabe tu contraseña... y tú no',cat:'Trucos PC',prio:'Alta',state:'Publicado',metrics:{views:48000,likes:5200,com:310,saves:4100,shares:980,foll:220}}),
     newVid({title:'Contraseña WiFi del router',hook:'La clave del WiFi está escondida en tu propio PC',cat:'Trucos PC',prio:'Alta',state:'Guionizado'})
-  ],collabs:[],invoices:[],barber_tx:[],profile:defProfile(),settings:defSettings()};
+  ],collabs:[],invoices:[],barber_tx:[],liquidity_history:[],profile:defProfile(),settings:defSettings()};
 }
 function migrate(d){
   const v=[];
   (d.ideas||[]).forEach(i=>v.push(newVid({title:(i.hook||'').slice(0,48),hook:i.hook,cat:i.cat||'Otro',prio:i.prio||'Media',state:'Idea'})));
   (d.pipe||[]).forEach(p=>v.push(newVid({title:p.title,hook:p.title,state:STATES.includes(p.state)?p.state:'Guionizado',plats:p.plats||['TikTok','Reels']})));
   (d.met||[]).forEach(m=>{let x=v.find(z=>z.title===m.title);if(!x){x=newVid({title:m.title,hook:m.title});v.push(x);}x.state='Publicado';x.metrics={views:+m.views||0,likes:+m.likes||0,com:+m.com||0,saves:+m.saves||0,shares:+m.shares||0,foll:+m.foll||0};x.plats=[m.plat||'TikTok'];});
-  return {videos:v,collabs:[],invoices:[],barber_tx:[],profile:defProfile(),settings:defSettings()};
+  return {videos:v,collabs:[],invoices:[],barber_tx:[],liquidity_history:[],profile:defProfile(),settings:defSettings()};
 }
 
 /* ===== NAV ===== */
 function go(t){
-  ['home','vids','collab','fact','barber','met'].forEach(x=>{document.getElementById('v-'+x).classList.toggle('on',x===t);document.getElementById('n-'+x).classList.toggle('on',x===t);});
-  const T={home:['⚡ Hoy','Tu siguiente acción, entregas y cobros.'],vids:['🎬 Vídeos','Cada ficha lleva todo: guion, descripción, fechas y métricas.'],collab:['🤝 Colaboraciones','Marcas, campañas, plazos y progreso.'],fact:['🧾 Facturas','Borradores, vencimientos, cobros y PDF.'],barber:['💈 Barbería','Cobros rápidos de servicios y método de pago.'],met:['📊 Métricas','Tus números y tus ingresos de un vistazo.']};
+  ['home','vids','collab','fact','barber','liq','met'].forEach(x=>{document.getElementById('v-'+x).classList.toggle('on',x===t);document.getElementById('n-'+x).classList.toggle('on',x===t);});
+  const T={home:['⚡ Hoy','Tu siguiente acción, entregas y cobros.'],vids:['🎬 Vídeos','Cada ficha lleva todo: guion, descripción, fechas y métricas.'],collab:['🤝 Colaboraciones','Marcas, campañas, plazos y progreso.'],fact:['🧾 Facturas','Borradores, vencimientos, cobros y PDF.'],barber:['💈 Barbería','Cobros rápidos de servicios y método de pago.'],liq:['💶 Liquidez','Tus saldos manuales y la evolución de tu patrimonio líquido.'],met:['📊 Métricas','Tus números y tus ingresos de un vistazo.']};
   document.getElementById('tt').childNodes[0].nodeValue=T[t][0];document.getElementById('tts').textContent=T[t][1];
-  if(t==='home')renderHome();if(t==='fact')renderFacturas();if(t==='barber')renderBarber();if(t==='met')renderMet();
+if(t==='home')renderHome();if(t==='fact')renderFacturas();if(t==='barber')renderBarber();if(t==='liq')renderLiquidity();if(t==='met')renderMet();
 }
 
 /* ===== RENDER HELPERS ===== */
@@ -716,8 +731,50 @@ function saveBarberTx(){
   persist();renderBarber();toast('Cobro guardado 💈');
 }
 
+/* ===== LIQUIDEZ ===== */
+const liquidityFields=['santander','revolut','bote','cartera'];
+function liquidityTotal(x){return liquidityFields.reduce((sum,key)=>sum+(+x[key]||0),0);}
+function liquidityHistory(){return data.liquidity_history||[];}
+function latestLiquidity(){return [...liquidityHistory()].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]||null;}
+function liquidityValue(id){return Math.max(0,+String(document.getElementById(id).value||'').replace(',','.')||0);}
+function updateLiquidityTotal(){const total=liquidityFields.reduce((sum,key)=>sum+liquidityValue('liq-'+key),0);const el=document.getElementById('liq-live-total');if(el)el.textContent=eur2(total);}
+function loadLiquidityDate(){const selected=liquidityHistory().find(x=>x.date===val('liq-date'))||latestLiquidity()||{};liquidityFields.forEach(key=>{const input=document.getElementById('liq-'+key);if(input)input.value=selected[key]||'';});updateLiquidityTotal();}
+function liquidityChart(rows){
+  const points=[...rows].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(-10);
+  if(!points.length)return `<div class="empty" style="padding:22px"><b>Sin histórico todavía</b>Guarda tu primera foto de liquidez para empezar a ver la evolución.</div>`;
+  const values=points.map(liquidityTotal), min=Math.min(...values), max=Math.max(...values), range=Math.max(1,max-min), w=340,h=150,padX=12,padTop=18,padBottom=28;
+  const x=i=>points.length===1?w/2:padX+i*((w-padX*2)/(points.length-1));
+  const y=n=>padTop+(max-n)*(h-padTop-padBottom)/range;
+  const coords=points.map((row,i)=>({x:x(i),y:y(values[i]),row,value:values[i]}));
+  const line=coords.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+  const area=`${line} L ${coords[coords.length-1].x.toFixed(1)} ${h-padBottom} L ${coords[0].x.toFixed(1)} ${h-padBottom} Z`;
+  const grid=[0,.5,1].map(r=>{const gy=padTop+r*(h-padTop-padBottom);return `<line x1="${padX}" y1="${gy}" x2="${w-padX}" y2="${gy}" stroke="rgba(255,255,255,.10)" stroke-width="1"/>`;}).join('');
+  const labels=coords.map((p,i)=>`<text x="${p.x}" y="${h-8}" fill="rgba(184,199,211,.72)" font-size="9" text-anchor="middle">${i===0||i===coords.length-1||coords.length<=5?fmtFull(p.row.date).slice(0,5):''}</text>`).join('');
+  const dots=coords.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3.6" fill="#080b11" stroke="#27e07a" stroke-width="2"><title>${fmtFull(p.row.date)}: ${eur2(p.value)}</title></circle>`).join('');
+  return `<div class="liqchart"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Evolución del patrimonio líquido"><defs><linearGradient id="liq-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#27e07a" stop-opacity=".28"/><stop offset="1" stop-color="#27e07a" stop-opacity="0"/></linearGradient></defs>${grid}<path d="${area}" fill="url(#liq-fill)"/><path d="${line}" fill="none" stroke="#27e07a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}</svg><div class="liqaxis"><span>${eur2(min)}</span><span>${eur2(max)}</span></div></div>`;
+}
+function renderLiquidity(){
+  const el=document.getElementById('v-liq');if(!el)return;
+  const history=liquidityHistory(), latest=latestLiquidity()||{date:today(),santander:0,revolut:0,bote:0,cartera:0}, ordered=[...history].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const current=liquidityTotal(latest), previous=ordered[1]?liquidityTotal(ordered[1]):null, delta=previous===null?'Primera fotografía guardada':`${current>=previous?'+':''}${eur2(current-previous)} desde la foto anterior`;
+  let h=`<div class="liqhero"><div class="k">Total liquidez</div><div class="v">${eur2(current)}</div><div class="sub">${esc(delta)}${history.length?` · Actualizado ${fmtFull(latest.date)}`:''}</div></div>`;
+  h+=`<div class="card liqform" style="cursor:default"><div class="sect" style="margin-top:0">Registrar saldos</div><div class="field"><label>Fecha de la fotografía</label><input id="liq-date" type="date" value="${latest.date||today()}" onchange="loadLiquidityDate()"></div><div class="row2"><div class="field" style="flex:1"><label>Santander</label><input id="liq-santander" class="liqinput" type="number" inputmode="decimal" min="0" step="0.01" value="${latest.santander||''}" oninput="updateLiquidityTotal()"></div><div class="field" style="flex:1"><label>Revolut</label><input id="liq-revolut" class="liqinput" type="number" inputmode="decimal" min="0" step="0.01" value="${latest.revolut||''}" oninput="updateLiquidityTotal()"></div></div><div class="row2"><div class="field" style="flex:1"><label>Bote físico</label><input id="liq-bote" class="liqinput" type="number" inputmode="decimal" min="0" step="0.01" value="${latest.bote||''}" oninput="updateLiquidityTotal()"></div><div class="field" style="flex:1"><label>Cartera</label><input id="liq-cartera" class="liqinput" type="number" inputmode="decimal" min="0" step="0.01" value="${latest.cartera||''}" oninput="updateLiquidityTotal()"></div></div><div class="mrow" style="margin:4px 0 13px"><span>Total de esta foto</span><b id="liq-live-total" style="color:var(--neon);font-family:var(--disp);font-size:18px">${eur2(current)}</b></div><button class="savebtn" onclick="saveLiquidity()">GUARDAR FOTOGRAFÍA</button></div>`;
+  h+=`<div class="sect">Evolución del patrimonio líquido<span class="n">${history.length}</span></div>${liquidityChart(history)}`;
+  h+=`<div class="sect">Histórico de saldos</div>`;
+  h+=ordered.length?ordered.slice(0,20).map(row=>`<div class="card" style="cursor:default"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><div class="title">${fmtFull(row.date)} · ${eur2(liquidityTotal(row))}</div><div class="snapmeta"><span>Santander ${eur2(row.santander)}</span><span>Revolut ${eur2(row.revolut)}</span><span>Bote ${eur2(row.bote)}</span><span>Cartera ${eur2(row.cartera)}</span></div></div><button class="snapdel" aria-label="Eliminar fotografía" onclick="deleteLiquidity('${row.id}')">×</button></div></div>`).join(''):`<div class="empty"><b>Aún no hay saldos</b>Registra tu primera fotografía para guardar la liquidez de hoy.</div>`;
+  el.innerHTML=h;
+}
+function saveLiquidity(){
+  if(!data.liquidity_history)data.liquidity_history=[];
+  const date=val('liq-date')||today(), snapshot={date,santander:liquidityValue('liq-santander'),revolut:liquidityValue('liq-revolut'),bote:liquidityValue('liq-bote'),cartera:liquidityValue('liq-cartera')};
+  const existing=data.liquidity_history.find(x=>x.date===date);
+  if(existing){Object.assign(existing,snapshot);toast('Saldos de '+fmtFull(date)+' actualizados');}else{data.liquidity_history.push(Object.assign({id:uid(),createdAt:Date.now()},snapshot));toast('Fotografía de liquidez guardada');}
+  persist();renderLiquidity();
+}
+function deleteLiquidity(id){if(!confirm('¿Eliminar esta fotografía de liquidez?'))return;data.liquidity_history=data.liquidity_history.filter(x=>x.id!==id);persist();renderLiquidity();toast('Fotografía eliminada');}
+
 /* ===== RENDER ALL / BADGES ===== */
-function renderAll(){renderHome();renderVids();renderCollabs();renderFacturas();renderBarber();renderMet();badges();}
+function renderAll(){renderHome();renderVids();renderCollabs();renderFacturas();renderBarber();renderLiquidity();renderMet();badges();}
 function badges(){
   const bv=document.getElementById('b-vids'),bc=document.getElementById('b-collab');
   const nv=data.videos.filter(v=>v.state!=='Publicado').length, nc=data.collabs.filter(c=>c.status==='Activa').length;
@@ -749,10 +806,10 @@ let tT;function toast(m){const t=document.getElementById('toast');t.textContent=
 
 /* ===== BACKUP ===== */
 function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='dptv-copia-'+today()+'.json';a.click();URL.revokeObjectURL(url);toast('Copia descargada ⬇');closeSheet();}
-function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{let j=JSON.parse(r.result);if(j.ideas||j.pipe||j.met)j=migrate(j);if(!j||!Array.isArray(j.videos)){toast('⚠ Archivo no válido');return;}if(confirm('Esto reemplaza todos tus datos actuales. ¿Seguir?')){data={videos:j.videos||[],collabs:j.collabs||[],invoices:j.invoices||[],barber_tx:j.barber_tx||[],profile:j.profile||defProfile(),settings:j.settings||defSettings()};persist();renderAll();closeSheet();toast('Copia restaurada ✅');}}catch(e){toast('⚠ No se pudo leer');}};r.readAsText(f);ev.target.value='';}
+function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{let j=JSON.parse(r.result);if(j.ideas||j.pipe||j.met)j=migrate(j);if(!j||!Array.isArray(j.videos)){toast('⚠ Archivo no válido');return;}if(confirm('Esto reemplaza todos tus datos actuales. ¿Seguir?')){data={videos:j.videos||[],collabs:j.collabs||[],invoices:j.invoices||[],barber_tx:j.barber_tx||[],liquidity_history:j.liquidity_history||[],profile:j.profile||defProfile(),settings:j.settings||defSettings()};persist();renderAll();closeSheet();toast('Copia restaurada ✅');}}catch(e){toast('⚠ No se pudo leer');}};r.readAsText(f);ev.target.value='';}
 
 /* ===== FIREBASE ===== */
-function persist(){if(!userRef)return Promise.resolve();return setDoc(userRef,{videos:data.videos,collabs:data.collabs,invoices:data.invoices,barber_tx:data.barber_tx||[],profile:data.profile,settings:data.settings}).catch(()=>toast('⚠ No se pudo guardar en la nube'));}
+function persist(){if(!userRef)return Promise.resolve();return setDoc(userRef,{videos:data.videos,collabs:data.collabs,invoices:data.invoices,barber_tx:data.barber_tx||[],liquidity_history:data.liquidity_history||[],profile:data.profile,settings:data.settings}).catch(()=>toast('⚠ No se pudo guardar en la nube'));}
 function hideLoader(){const l=document.getElementById('loader');if(l)l.style.display='none';}
 function lgErr(m){document.getElementById('lg-err').textContent=m||'';}
 function showLogin(){document.getElementById('login').style.display='flex';document.getElementById('app').style.display='none';hideLoader();}
@@ -767,7 +824,7 @@ function subscribe(u){
   userRef=doc(db,"control",u);
   if(unsub)unsub();
   unsub=onSnapshot(userRef,snap=>{
-    if(snap.exists()){const d=snap.data();if(d.videos||d.collabs){data={videos:d.videos||[],collabs:d.collabs||[],invoices:d.invoices||[],barber_tx:d.barber_tx||[],profile:d.profile||defProfile(),settings:d.settings||defSettings()};}else{data=migrate(d);persist();}}
+    if(snap.exists()){const d=snap.data();if(d.videos||d.collabs){data={videos:d.videos||[],collabs:d.collabs||[],invoices:d.invoices||[],barber_tx:d.barber_tx||[],liquidity_history:d.liquidity_history||[],profile:d.profile||defProfile(),settings:d.settings||defSettings()};}else{data=migrate(d);persist();}}
     else{seed();persist();}
     hideLoader();renderAll();
   },err=>{toast('⚠ Sin conexión');hideLoader();renderAll();});
@@ -909,7 +966,7 @@ function saveProfile(){data.profile={name:val('pf-name'),nif:val('pf-nif'),addre
 
 function duplicateVid(){const v=data.videos.find(x=>x.id===editVid);if(!v)return;const c=JSON.parse(JSON.stringify(v));c.id=uid();c.title=(v.title||'Vídeo')+' (copia)';c.state='Idea';c.pubDate='';c.metrics={views:0,likes:0,com:0,saves:0,shares:0,foll:0};c.createdAt=Date.now();data.videos.unshift(c);persist();renderAll();closeSheet();toast('Vídeo duplicado 📋');}
 function duplicateInvoice(){const i=data.invoices.find(x=>x.id===editInv);if(!i)return;const c=JSON.parse(JSON.stringify(i));c.id=uid();c.num=nextNum();c.date=today();c.status='Pendiente';c.createdAt=Date.now();data.invoices.unshift(c);persist();renderAll();closeSheet();toast('Factura duplicada 📋');}
-Object.assign(window,{go,openVid,openVidForm,saveVid,delVid,quickIdea,saveQuickIdea,stepState,setFilter,setSort,openCollab,saveCollab,delCollab,pickOne,pickMulti,openSheet,closeSheet,exportData,importData,doLogin,doSignup,doResetPass,doLogout,setHomeView,calNav,toggleSlot,tapDay,openDay,scheduleExistingVideo,createPostOnDay,editDayPost,setSearch,saveBarberTx,renderBarber,duplicateVid,duplicateInvoice,addDeliv,removeDeliv,toggleDeliv,delivEdit,renderFacturas,openInvoice,saveInvoice,delInvoice,addLine,removeLine,lineEdit,recalc,syncRates,invPickCollab,exportInvoicePDF,openProfile,saveProfile});
+Object.assign(window,{go,openVid,openVidForm,saveVid,delVid,quickIdea,saveQuickIdea,stepState,setFilter,setSort,openCollab,saveCollab,delCollab,pickOne,pickMulti,openSheet,closeSheet,exportData,importData,doLogin,doSignup,doResetPass,doLogout,setHomeView,calNav,toggleSlot,tapDay,openDay,scheduleExistingVideo,createPostOnDay,editDayPost,setSearch,saveBarberTx,renderBarber,renderLiquidity,saveLiquidity,deleteLiquidity,loadLiquidityDate,updateLiquidityTotal,duplicateVid,duplicateInvoice,addDeliv,removeDeliv,toggleDeliv,delivEdit,renderFacturas,openInvoice,saveInvoice,delInvoice,addLine,removeLine,lineEdit,recalc,syncRates,invPickCollab,exportInvoicePDF,openProfile,saveProfile});
 </script>
 </body>
 </html>
